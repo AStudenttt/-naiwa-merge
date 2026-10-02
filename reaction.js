@@ -78,11 +78,34 @@
    ctx.clearRect(0,0,target.width,target.height);ctx.save();ctx.translate(target.width/2-k*cx,target.height/2-k*cy);ctx.scale(k,k);ctx.drawImage(base,origin.x,origin.y,s.width,s.height);this.draw(ctx,[f]);ctx.restore();return true;
   }
   piece(ctx,image,p,angle,w,h,flip=false,alpha=1){ctx.save();ctx.globalAlpha=alpha;ctx.translate(p.x,p.y);ctx.rotate(angle);if(flip)ctx.scale(-1,1);ctx.drawImage(image,0,-h*.5,w,h);ctx.restore();}
+  rollingEye(ctx,p,width,height,angle,side,amount,alpha){
+   // A soft, shallow eye bulge. The iris and pupil travel upward as pressure
+   // rises, leaving the lower white sclera exposed for the rolled-eye look.
+   const bulge=1+amount*.12,ew=width*bulge,eh=height*(.90+amount*.10);
+   ctx.save();ctx.globalAlpha=alpha;ctx.translate(p.x,p.y);ctx.rotate(angle+side*.045);
+   ctx.translate(side*ew*.08,-eh*.22);
+   // Small warm occlusion under the lid keeps the eye attached to the face.
+   ctx.fillStyle='rgba(105,77,49,.16)';ctx.beginPath();ctx.ellipse(0,eh*.12,ew*.53,eh*.48,0,0,Math.PI*2);ctx.fill();
+   const white=ctx.createRadialGradient(-ew*.16,-eh*.22,eh*.04,0,0,eh*.72);
+   white.addColorStop(0,'#ffffff');white.addColorStop(.72,'#fffefa');white.addColorStop(1,'#d7c9b5');
+   ctx.fillStyle=white;ctx.strokeStyle='rgba(105,77,49,.34)';ctx.lineWidth=Math.max(.8,eh*.055);
+   ctx.beginPath();ctx.ellipse(0,0,ew*.48,eh*.48,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+   // Keep the familiar green iris, rolled up until it nearly meets the lid.
+   const irisX=side*ew*.025,irisY=-eh*(.285+.055*amount),ir=eh*.205;
+   const green=ctx.createRadialGradient(irisX-ir*.22,irisY-ir*.3,ir*.08,irisX,irisY,ir);
+   green.addColorStop(0,'#d7eb86');green.addColorStop(.62,'#87ad4b');green.addColorStop(1,'#526f35');
+   ctx.fillStyle=green;ctx.beginPath();ctx.ellipse(irisX,irisY,ir*.84,ir,0,0,Math.PI*2);ctx.fill();
+   const pupil=eh*.13;ctx.fillStyle='#20251c';ctx.beginPath();ctx.ellipse(irisX,irisY-eh*.025,pupil*.82,pupil,0,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='rgba(255,255,255,.94)';ctx.beginPath();ctx.arc(irisX-pupil*.3,irisY-pupil*.45,Math.max(.8,pupil*.24),0,Math.PI*2);ctx.fill();
+   // A slim upper lid reinforces the comical upward glance.
+   ctx.strokeStyle='rgba(105,77,49,.38)';ctx.lineWidth=Math.max(.8,eh*.045);ctx.beginPath();ctx.ellipse(0,0,ew*.48,eh*.48,0,Math.PI*1.08,Math.PI*1.92);ctx.stroke();
+   ctx.restore();
+  }
   draw(ctx,frogs){if(!this.ready)return;for(const f of frogs){if(!this.jelly.reactionImages?.[f.frog.level-1]||!f.reaction||f.reaction.amount<.002)continue;const index=f.frog.level-1,face=FACES[index],r=f.reaction,a=r.amount,alpha=r.blend,s=f.shape,ps=NaiwaJelly.positions(f),width=s.width*face.scale,phase=this.clock*.014+f.id,wiggle=Math.sin(phase)*a*.06;
     // Anchors follow the same deformed texture triangles as the face/body.
     for(const side of [-1,1]){const p=sample(ps,...face.arms[side<0?0:1]),length=width*(.16+.33*a),height=width*.26;this.piece(ctx,this.arms[index],p,f.angle+(side<0?-.08:.08)+wiggle,length,height,side<0,alpha);}
     const mouth=sample(ps,...face.mouth);ctx.save();ctx.globalAlpha=alpha;ctx.translate(mouth.x,mouth.y);ctx.rotate(f.angle+(face.angle||0));ctx.strokeStyle='#69543b';ctx.lineWidth=Math.max(.3,width*.015);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-width*.085,0);ctx.quadraticCurveTo(0,width*.018,width*.085,0);ctx.stroke();ctx.restore();
-    for(const side of [-1,1]){const p=sample(ps,...face.eyes[side<0?0:1]),length=width*(.08+.49*a),height=width*(.17+.035*a);this.piece(ctx,this.eyes[index],p,f.angle+(face.angle||0)+(side<0?.28:-.28),length,height,side<0,alpha);}
+    for(const side of [-1,1]){const p=sample(ps,...face.eyes[side<0?0:1]),eyeWidth=width*(.18+.015*a),eyeHeight=width*(.17+.015*a);this.rollingEye(ctx,p,eyeWidth,eyeHeight,f.angle+(face.angle||0),side,a,alpha);}
     const tongue=sample(ps,face.mouth[0]+r.side*.07*face.scale,face.mouth[1]+.005),length=width*(.06+.38*a),height=length*this.tongue.height/this.tongue.width;
     // The tongue image's root is at its upper-left rather than centre-left.
     ctx.save();ctx.globalAlpha=alpha*a;ctx.translate(tongue.x,tongue.y);ctx.rotate(f.angle+(face.angle||0)+wiggle);if(r.side<0)ctx.scale(-1,1);ctx.drawImage(this.tongue,0,-height*.13,length,height);ctx.restore();
