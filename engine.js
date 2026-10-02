@@ -9,10 +9,10 @@
   constructor({width=400,height=700,warning=205,shapes,onMerge=()=>{},onOver=()=>{}}){
    Object.assign(this,{width,height,warning,shapes,onMerge,onOver});
    this.engine=Engine.create({enableSleeping:true});Object.assign(this.engine,{positionIterations:7,velocityIterations:6,constraintIterations:4});this.engine.gravity.y=1.05;
-   this.aboveFor=0;this.clock=0;this.score=0;this.cooldown=0;this.over=false;this.pending=[];this.won=false;this.wallBodies=[];this.frogs=[];
+   this.contactFor=0;this.aboveFor=0;this.clock=0;this.score=0;this.cooldown=0;this.over=false;this.pending=[];this.won=false;this.wallBodies=[];this.frogs=[];
    this.resize(height);
   }
-  resize(height){const delta=height-this.height;if(Math.abs(delta)>.01)this.aboveFor=0;this.height=height;for(const b of this.wallBodies)Composite.remove(this.engine.world,b);this.wallBodies=[Bodies.rectangle(-18,height/2,48,height*3,{isStatic:true,label:'left',friction:.55}),Bodies.rectangle(this.width+18,height/2,48,height*3,{isStatic:true,label:'right',friction:.55}),Bodies.rectangle(this.width/2,height+22,this.width+80,60,{isStatic:true,label:'floor',friction:.65})];Composite.add(this.engine.world,this.wallBodies);if(Math.abs(delta)>.01)for(const f of this.frogs){this.wake(f);for(const n of f.nodes){Body.translate(n,{x:0,y:delta});Body.setVelocity(n,{x:n.velocity.x,y:0});}f.frog.aboveFor=0;this.measure(f);}}
+  resize(height){const delta=height-this.height;if(Math.abs(delta)>.01){this.contactFor=0;this.aboveFor=0;}this.height=height;for(const b of this.wallBodies)Composite.remove(this.engine.world,b);this.wallBodies=[Bodies.rectangle(-18,height/2,48,height*3,{isStatic:true,label:'left',friction:.55}),Bodies.rectangle(this.width+18,height/2,48,height*3,{isStatic:true,label:'right',friction:.55}),Bodies.rectangle(this.width/2,height+22,this.width+80,60,{isStatic:true,label:'floor',friction:.65})];Composite.add(this.engine.world,this.wallBodies);if(Math.abs(delta)>.01)for(const f of this.frogs){this.wake(f);for(const n of f.nodes){Body.translate(n,{x:0,y:delta});Body.setVelocity(n,{x:n.velocity.x,y:0});}f.frog.aboveFor=0;this.measure(f);}}
   make(level,x,y,options={}){
    const s=this.shapes[level-1],soft=s.soft;if(!soft)throw new Error('Soft mesh is required');
    const group=Body.nextGroup(true),co=Math.cos(options.angle||0),si=Math.sin(options.angle||0);
@@ -117,12 +117,14 @@
        f.bounds.max.x>=15&&f.bounds.min.x<=this.width-15)touching=true;
    }
    // Count only uninterrupted contact; clear on the first contact-free tick.
-   this.aboveFor=touching?this.aboveFor+ms:0;
+   this.contactFor=touching?this.contactFor+ms:0;
+   // Ignore brief crossings during ordinary drops before showing a warning.
+   this.aboveFor=Math.max(0,this.contactFor-400);
    if(this.aboveFor>=2000){this.over=true;this.onOver(this.score);}
   }
   danger(){return this.aboveFor;}
 
-  reset(){for(const f of [...this.frogs])this.remove(f);this.pending=[];this.score=0;this.cooldown=0;this.over=false;this.won=false;this.aboveFor=0;this.clock=0;Engine.clear(this.engine);}
+  reset(){for(const f of [...this.frogs])this.remove(f);this.pending=[];this.score=0;this.cooldown=0;this.over=false;this.won=false;this.contactFor=0;this.aboveFor=0;this.clock=0;Engine.clear(this.engine);}
  }
  root.NaiwaPhysics={GamePhysics,META,AREAS};if(typeof module!=='undefined'&&module.exports)module.exports=root.NaiwaPhysics;
 })(typeof window!=='undefined'?window:globalThis);
