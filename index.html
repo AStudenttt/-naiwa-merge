@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff7df"><meta name="description" content="把相同的奶蛙合成更大的一只。十一种造型，软弹碰撞，挑战大奶蛙。">
+<title>合成大奶蛙</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23ffca39'/%3E%3Ccircle cx='11' cy='12' r='5' fill='%2398b965'/%3E%3Ccircle cx='21' cy='12' r='5' fill='%2398b965'/%3E%3Ccircle cx='11' cy='12' r='2' fill='%23342920'/%3E%3Ccircle cx='21' cy='12' r='2' fill='%23342920'/%3E%3Cpath d='M11 23h10' stroke='%23342920' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="game" aria-label="合成大奶蛙游戏">
+ <canvas id="board" tabindex="0" aria-label="游戏容器。左右方向键移动，空格投放奶蛙。"></canvas>
+ <header class="hud">
+  <div class="scoreboard"><h1>合成大奶蛙</h1><div class="scoreline"><strong id="score">0</strong><span>分</span></div><div class="best">最高 <span id="best">0</span></div></div>
+  <div class="nextbox"><span class="label">下一只</span><canvas id="next" width="160" height="160" aria-label="下一只奶蛙"></canvas></div>
+  <button id="menu" class="icon-button" aria-label="打开暂停菜单"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg></button>
+ </header>
+ <div id="loading" class="loading"><span class="loader"></span><strong>奶蛙正在集合</strong><span>马上就可以开始</span></div>
+ <div id="hint" class="hint" hidden><span class="hint-title">两只相同，就变大一只</span><span id="controlHint">左右拖动，松手落下</span><span class="hint-note">合成第 11 级大奶蛙</span></div>
+ <div id="toast" role="status" class="toast"></div>
+ <div id="modal" class="modal" hidden>
+  <section id="menuPanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+   <div class="panel-kicker">合成大奶蛙</div><h2 id="menuTitle">休息一下</h2><p class="panel-sub">奶蛙们在等你回来</p>
+   <button id="resume" class="primary">继续游戏</button><button id="galleryButton" class="secondary">合成图鉴 <span>11 种奶蛙</span></button><button id="restart" class="secondary">重新开始</button>
+   <p class="menu-note">同级碰撞合成 · 越线持续 2 秒结束</p>
+  </section>
+  <section id="galleryPanel" class="panel gallery-panel" hidden role="dialog" aria-modal="true" aria-labelledby="galleryTitle">
+   <div class="gallery-head"><div><div class="panel-kicker">奶蛙档案</div><h2 id="galleryTitle">合成图鉴</h2></div><button id="galleryBack" class="icon-button" aria-label="返回菜单"><svg viewBox="0 0 24 24"><path d="m8 8 8 8M16 8l-8 8"/></svg></button></div>
+   <p class="panel-sub">两只同级合成下一级，颜色与造型一起升级。</p><button id="reactionPreview" class="secondary">查看受压形象</button><div id="galleryGrid" class="gallery-grid"></div>
+  </section>
+  <section id="confirmPanel" class="panel" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle"><div class="panel-kicker">重新开始</div><h2 id="confirmTitle">再来一局？</h2><p class="panel-sub">本局分数将清零，最高分会保留。</p><button id="confirmRestart" class="primary">确定重来</button><button id="cancelRestart" class="secondary">返回</button></section>
+  <section id="overPanel" class="panel over-panel" hidden role="dialog" aria-modal="true" aria-labelledby="overTitle"><div class="panel-kicker">本局结束</div><h2 id="overTitle">奶蛙挤满啦</h2><span class="result-label">本局得分</span><strong id="finalScore" class="final-score">0</strong><p id="finalBest" class="panel-sub"></p><button id="playAgain" class="primary">再来一局</button><button id="overGallery" class="secondary">看看合成图鉴</button></section>
+ </div>
+</main>
+<script src="matter.min.js"></script><script src="engine.js?v=6"></script><script src="jelly.js?v=6"></script><script src="reaction.js?v=6"></script><script src="game.js?v=6"></script>
+</body></html>
