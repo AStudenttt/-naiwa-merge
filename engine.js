@@ -9,10 +9,10 @@
   constructor({width=400,height=700,warning=205,shapes,onMerge=()=>{},onOver=()=>{}}){
    Object.assign(this,{width,height,warning,shapes,onMerge,onOver});
    this.engine=Engine.create({enableSleeping:true});Object.assign(this.engine,{positionIterations:7,velocityIterations:6,constraintIterations:4});this.engine.gravity.y=1.05;
-   this.clock=0;this.score=0;this.cooldown=0;this.over=false;this.pending=[];this.won=false;this.wallBodies=[];this.frogs=[];
+   this.aboveFor=0;this.clock=0;this.score=0;this.cooldown=0;this.over=false;this.pending=[];this.won=false;this.wallBodies=[];this.frogs=[];
    this.resize(height);
   }
-  resize(height){const delta=height-this.height;this.height=height;for(const b of this.wallBodies)Composite.remove(this.engine.world,b);this.wallBodies=[Bodies.rectangle(-18,height/2,48,height*3,{isStatic:true,label:'left',friction:.55}),Bodies.rectangle(this.width+18,height/2,48,height*3,{isStatic:true,label:'right',friction:.55}),Bodies.rectangle(this.width/2,height+22,this.width+80,60,{isStatic:true,label:'floor',friction:.65})];Composite.add(this.engine.world,this.wallBodies);if(Math.abs(delta)>.01)for(const f of this.frogs){this.wake(f);for(const n of f.nodes){Body.translate(n,{x:0,y:delta});Body.setVelocity(n,{x:n.velocity.x,y:0});}f.frog.aboveFor=0;this.measure(f);}}
+  resize(height){const delta=height-this.height;if(Math.abs(delta)>.01)this.aboveFor=0;this.height=height;for(const b of this.wallBodies)Composite.remove(this.engine.world,b);this.wallBodies=[Bodies.rectangle(-18,height/2,48,height*3,{isStatic:true,label:'left',friction:.55}),Bodies.rectangle(this.width+18,height/2,48,height*3,{isStatic:true,label:'right',friction:.55}),Bodies.rectangle(this.width/2,height+22,this.width+80,60,{isStatic:true,label:'floor',friction:.65})];Composite.add(this.engine.world,this.wallBodies);if(Math.abs(delta)>.01)for(const f of this.frogs){this.wake(f);for(const n of f.nodes){Body.translate(n,{x:0,y:delta});Body.setVelocity(n,{x:n.velocity.x,y:0});}f.frog.aboveFor=0;this.measure(f);}}
   make(level,x,y,options={}){
    const s=this.shapes[level-1],soft=s.soft;if(!soft)throw new Error('Soft mesh is required');
    const group=Body.nextGroup(true),co=Math.cos(options.angle||0),si=Math.sin(options.angle||0);
@@ -32,7 +32,7 @@
   wake(f){if(!f.isSleeping)return;f.isSleeping=false;f.quiet=0;for(const n of f.nodes)Sleeping.set(n,false);}
   remove(f){Composite.remove(this.engine.world,f.nodes);const i=this.frogs.indexOf(f);if(i>=0)this.frogs.splice(i,1);}
   drop(level,x){if(this.over||this.cooldown>0)return null;const s=this.shapes[level-1];x=Math.max(10+s.width/2,Math.min(this.width-10-s.width/2,x));const f=this.make(level,x,this.warning-s.height/2-5);for(const n of f.nodes)Body.setVelocity(n,{x:0,y:1.6});this.cooldown=500;return f;}
-  mergePending(){const pending=this.pending;this.pending=[];for(const [a,b] of pending){if(!this.frogs.includes(a)||!this.frogs.includes(b))continue;const level=a.frog.level+1,s=this.shapes[level-1];this.measure(a);this.measure(b);let x=(a.position.x+b.position.x)/2,y=(a.position.y+b.position.y)/2;x=Math.max(10+s.width/2,Math.min(this.width-10-s.width/2,x));y=Math.min(this.height-12-s.height/2,y);const entered=a.frog.entered||b.frog.entered,vx=Math.max(-1.5,Math.min(1.5,(a.velocity.x+b.velocity.x)/2));this.remove(a);this.remove(b);const f=this.make(level,x,y,{entered,pop:1});for(const n of f.nodes)Body.setVelocity(n,{x:vx,y:Math.min(0,(a.velocity.y+b.velocity.y)/2)});const points=2**(level-1);this.score+=points;const firstWin=level===11&&!this.won;if(firstWin)this.won=true;this.onMerge({level,points,x,y,score:this.score,firstWin});}}
+  mergePending(){const pending=this.pending;this.pending=[];for(const [a,b] of pending){if(!this.frogs.includes(a)||!this.frogs.includes(b))continue;const level=a.frog.level+1,s=this.shapes[level-1];this.measure(a);this.measure(b);let x=(a.position.x+b.position.x)/2,y=(a.position.y+b.position.y)/2;x=Math.max(10+s.width/2,Math.min(this.width-10-s.width/2,x));y=Math.min(this.height-12-s.height/2,y);const entered=a.frog.entered||b.frog.entered||a.frog.age>=500||b.frog.age>=500,vx=Math.max(-1.5,Math.min(1.5,(a.velocity.x+b.velocity.x)/2));this.remove(a);this.remove(b);const f=this.make(level,x,y,{entered,pop:1});for(const n of f.nodes)Body.setVelocity(n,{x:vx,y:Math.min(0,(a.velocity.y+b.velocity.y)/2)});const points=2**(level-1);this.score+=points;const firstWin=level===11&&!this.won;if(firstWin)this.won=true;this.onMerge({level,points,x,y,score:this.score,firstWin});}}
   weight(n){return n.isStatic||n.owner.isSleeping?0:n.inverseMass;}
   solveLengths(f,dt){
    for(const e of f.links){const a=f.nodes[e.a],b=f.nodes[e.b],wa=this.weight(a),wb=this.weight(b),dx=b.position.x-a.position.x,dy=b.position.y-a.position.y,l=Math.hypot(dx,dy);if(l<1e-8||wa+wb===0)continue;
@@ -108,17 +108,21 @@
    this.mergePending();
   }
   tick(ms){if(this.over)return;this.clock+=ms;this.cooldown=Math.max(0,this.cooldown-ms);const substeps=Math.max(1,Math.ceil(ms/(1000/180)));for(let i=0;i<substeps;i++)this.step(ms/substeps);
+   let touching=false;
    for(const f of this.frogs){const p=f.frog;p.age+=ms;p.pop=Math.max(0,p.pop-ms/320);
-    // A piece can be launched upward before its whole shape crosses the
-    // warning line. Do not require that downward crossing forever: after a
-    // brief spawn grace, a piece still above the line is treated as entered
-    // so a frog that escapes and never falls back can still end the game.
     if(f.bounds.min.y>this.warning+3||p.age>=500)p.entered=true;
-    if(p.entered&&f.bounds.min.y<this.warning){p.aboveFor+=ms;if(p.aboveFor>=2000){this.over=true;this.onOver(this.score);return;}}else p.aboveFor=0;
+    // Contact with the visible line, including either boundary touching it.
+    // A piece wholly above or below the line does not keep the timer alive.
+    if(f.bounds.min.y<=this.warning&&f.bounds.max.y>=this.warning&&
+       f.bounds.max.x>=15&&f.bounds.min.x<=this.width-15)touching=true;
    }
+   // Count only uninterrupted contact; clear on the first contact-free tick.
+   this.aboveFor=touching?this.aboveFor+ms:0;
+   if(this.aboveFor>=2000){this.over=true;this.onOver(this.score);}
   }
-  danger(){let max=0;for(const f of this.frogs)max=Math.max(max,f.frog.aboveFor);return max;}
-  reset(){for(const f of [...this.frogs])this.remove(f);this.pending=[];this.score=0;this.cooldown=0;this.over=false;this.won=false;this.clock=0;Engine.clear(this.engine);}
+  danger(){return this.aboveFor;}
+
+  reset(){for(const f of [...this.frogs])this.remove(f);this.pending=[];this.score=0;this.cooldown=0;this.over=false;this.won=false;this.aboveFor=0;this.clock=0;Engine.clear(this.engine);}
  }
  root.NaiwaPhysics={GamePhysics,META,AREAS};if(typeof module!=='undefined'&&module.exports)module.exports=root.NaiwaPhysics;
 })(typeof window!=='undefined'?window:globalThis);

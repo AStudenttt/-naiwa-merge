@@ -49,7 +49,7 @@
   ctx.fillStyle='#e8c78855';for(let y=190;y<H-10;y+=28)for(let x=20;x<W;x+=28){ctx.beginPath();ctx.arc(x,y,.65,0,Math.PI*2);ctx.fill();}
   const warning=physics.warning,danger=physics.danger(),color=danger?'#d85c38':'#d9b477';
   if(danger){ctx.fillStyle=`rgba(224,85,48,${.045+.025*Math.sin(performance.now()/140)})`;ctx.fillRect(0,warning,W,Math.min(55,H-warning));}
-  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.4;ctx.setLineDash([5,6]);ctx.beginPath();ctx.moveTo(15,warning);ctx.lineTo(W-15,warning);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=color;ctx.font='600 12px sans-serif';ctx.textAlign='right';ctx.fillText(danger?`越线 ${Math.max(0,(2000-danger)/1000).toFixed(1)}s`:'警戒线',W-18,warning-8);ctx.restore();
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.4;ctx.setLineDash([5,6]);ctx.beginPath();ctx.moveTo(15,warning);ctx.lineTo(W-15,warning);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=color;ctx.font='600 12px sans-serif';ctx.textAlign='right';ctx.fillText(danger?`碰线 ${Math.max(0,(2000-danger)/1000).toFixed(1)}s`:'警戒线',W-18,warning-8);ctx.restore();
   // The container uses the full play surface; no footer or tools beneath it.
   ctx.strokeStyle='#d2a762';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(7,warning+12);ctx.lineTo(7,H-9);ctx.quadraticCurveTo(7,H-7,12,H-7);ctx.lineTo(W-12,H-7);ctx.quadraticCurveTo(W-7,H-7,W-7,H-12);ctx.lineTo(W-7,warning+12);ctx.stroke();
   const bodies=physics.frogs;reaction?.update(bodies,paused?0:dt);jelly.draw(ctx,bodies,W,H,canvas.width,canvas.height);reaction?.draw(ctx,bodies);
@@ -62,3 +62,4 @@
  // Minimal deterministic access for automated rule verification; absent in ordinary play.
  if(new URLSearchParams(location.search).has('verify'))window.naiwaVerify={get physics(){return physics},get sprites(){return sprites},drop,openPanel,closePanel,restart,get paused(){return paused}};
 })();
+
