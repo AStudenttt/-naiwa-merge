@@ -108,7 +108,14 @@
    this.mergePending();
   }
   tick(ms){if(this.over)return;this.clock+=ms;this.cooldown=Math.max(0,this.cooldown-ms);const substeps=Math.max(1,Math.ceil(ms/(1000/180)));for(let i=0;i<substeps;i++)this.step(ms/substeps);
-   for(const f of this.frogs){const p=f.frog;p.age+=ms;p.pop=Math.max(0,p.pop-ms/320);if(f.bounds.min.y>this.warning+3)p.entered=true;if(p.entered&&f.bounds.min.y<this.warning){p.aboveFor+=ms;if(p.aboveFor>=2000){this.over=true;this.onOver(this.score);return;}}else p.aboveFor=0;}
+   for(const f of this.frogs){const p=f.frog;p.age+=ms;p.pop=Math.max(0,p.pop-ms/320);
+    // A piece can be launched upward before its whole shape crosses the
+    // warning line. Do not require that downward crossing forever: after a
+    // brief spawn grace, a piece still above the line is treated as entered
+    // so a frog that escapes and never falls back can still end the game.
+    if(f.bounds.min.y>this.warning+3||p.age>=500)p.entered=true;
+    if(p.entered&&f.bounds.min.y<this.warning){p.aboveFor+=ms;if(p.aboveFor>=2000){this.over=true;this.onOver(this.score);return;}}else p.aboveFor=0;
+   }
   }
   danger(){let max=0;for(const f of this.frogs)max=Math.max(max,f.frog.aboveFor);return max;}
   reset(){for(const f of [...this.frogs])this.remove(f);this.pending=[];this.score=0;this.cooldown=0;this.over=false;this.won=false;this.clock=0;Engine.clear(this.engine);}
