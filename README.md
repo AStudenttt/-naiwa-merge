@@ -1,3 +1,5 @@
+![Milk Frog Merge cover](cover.png)
+
 # Milk Frog Merge
 ### 合成大奶蛙
 
